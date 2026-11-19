@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistem Manajemen Parkir Kendaraan 1 Halaman dengan tarif otomatis, kapasitas real-time, dan log tersimpan.">
+  <title>Smart Parking System — Aplikasi Parkir</title>
+  <style>
+    :root {
+      --bg-page: #f4f6f9;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f8fafc;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --border-color: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --secondary: #0f766e;
+      --secondary-hover: #115e59;
+      --danger: #dc2626;
+      --success-bg: #ecfdf5;
+      --success-text: #065f46;
+      --error-bg: #fef2f2;
+      --error-text: #991b1b;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.08);
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    .container {
+      width: min(1120px, 100% - 2rem);
+      margin-inline: auto;
+    }
+
+    /* Header */
+    .app-header {
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      padding-block: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header-content {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .app-header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .subtitle {
+      margin: 0.2rem 0 0;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .revenue-card {
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 1rem;
+      text-align: right;
+    }
+
+    .revenue-card .label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+    }
+
+    .revenue-amount {
+      font-size: 1.25rem;
+      color: var(--secondary);
+    }
+
+    /* Layout */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      padding-block: 1.5rem 2.5rem;
+    }
+
+    @media (min-width: 860px) {
+      .main-grid {
+        grid-template-columns: minmax(340px, 420px) 1fr;
+        align-items: start;
+      }
+    }
+
+    .card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .card h2 {
+      margin: 0 0 1.25rem;
+      font-size: 1.15rem;
+    }
+
+    .card h3 {
+      margin: 0 0 0.75rem;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 1.15rem;
+      border: 0;
+      padding: 0;
+    }
+
+    label,
+    legend {
+      display: block;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.45rem;
+    }
+
+    input[type="text"],
+    input[type="search"],
+    select {
+      width: 100%;
+      padding: 0.65rem 0.8rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--text-primary);
+      background-color: var(--bg-surface);
+      border: 1px solid #cbd5e1;
+      border-radius: var(--radius-sm);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input[type="text"] {
+      text-transform: uppercase;
+    }
+
+    :is(input, select, button):focus-visible {
+      outline: 3px solid rgba(37, 99, 235, 0.35);
+      outline-offset: 2px;
+      border-color: var(--primary);
+    }
+
+    .radio-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+
+    .radio-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 500;
+      font-size: 0.85rem;
+      padding: 0.55rem 0.6rem;
+      margin: 0;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background-color: var(--bg-subtle);
+      cursor: pointer;
+    }
+
+    .radio-pill small {
+      display: block;
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      padding: 0.7rem 1rem;
+      font-size: 0.92rem;
+      font-weight: 600;
+      font-family: inherit;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary);
+      color: #ffffff;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--secondary-hover);
+    }
+
+    .btn-ghost {
+      background-color: transparent;
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+
+    .btn-ghost:hover {
+      background-color: #fef2f2;
+    }
+
+    .btn-sm {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.8rem;
+    }
+
+    /* Feedback */
+    .feedback {
+      margin-top: 1rem;
+      padding: 0.65rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      display: none;
+    }
+
+    .feedback.is-visible {
+      display: block;
+    }
+
+    .feedback.is-success {
+      background-color: var(--success-bg);
+      color: var(--success-text);
+    }
+
+    .feedback.is-error {
+      background-color: var(--error-bg);
+      color: var(--error-text);
+    }
+
+    /* Kapasitas */
+    .capacity-section {
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .capacity-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+    }
+
+    .capacity-item {
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem;
+      text-align: center;
+    }
+
+    .capacity-item strong {
+      display: block;
+      font-size: 0.9rem;
+    }
+
+    .capacity-item span {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    /* Log */
+    .log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .log-header h2 {
+      margin: 0;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.65rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (min-width: 540px) {
+      .toolbar {
+        grid-template-columns: 1fr 180px;
+      }
+    }
+
+    .log-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .log-item {
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem 1rem;
+      background-color: var(--bg-subtle);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .log-plat {
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+    }
+
+    .log-meta {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-top: 0.2rem;
+    }
+
+    .log-right {
+      text-align: right;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+    }
+
+    .badge-active {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge-done {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+
+    .log-fee {
+      font-weight: 700;
+      font-size: 0.92rem;
+      margin-top: 0.25rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-secondary);
+      padding: 2rem 1rem;
+      border: 1px dashed var(--border-color);
+      border-radius: var(--radius-sm);
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="container header-content">
+      <div>
+        <h1>Aplikasi Parkir</h1>
+        <p class="subtitle">Manajemen Kendaraan, Tarif Otomatis &amp; Riwayat Log</p>
+      </div>
+      <div class="revenue-card" aria-live="polite">
+        <span class="label">Total Pendapatan</span>
+        <strong id="total-revenue" class="revenue-amount">Rp 0</strong>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-grid">
+    <!-- Panel Input & Kapasitas -->
+    <section class="card" aria-labelledby="form-heading">
+      <h2 id="form-heading">Check-In / Check-Out Kendaraan</h2>
+
+      <form id="parking-form" novalidate>
+        <div class="form-group">
+          <label for="plat">Nomor Plat Kendaraan</label>
+          <input
+            type="text"
+            id="plat"
+            name="plat"
+            placeholder="Contoh: B 1234 XYZ"
+            autocomplete="off"
+            required
+          >
+        </div>
+
+        <fieldset class="form-group">
+          <legend>Jenis Kendaraan</legend>
+          <div class="radio-group">
+            <label class="radio-pill">
+              <input type="radio" name="jenis" value="Motor" checked>
+              <span>Motor <small>(Rp 3.000/jam)</small></span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="jenis" value="Mobil">
+              <span>Mobil <small>(Rp 5.000/jam)</small></span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="jenis" value="Bus">
+              <span>Bus <small>(Rp 10.000/jam)</small></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="button-group">
+          <button type="button" id="btn-masuk" class="btn btn-primary">Masuk</button>
+          <button type="button" id="btn-keluar" class="btn btn-secondary">Keluar &amp; Bayar</button>
+        </div>
+      </form>
+
+      <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+
+      <!-- Fitur 2: Kapasitas Slot -->
+      <div class="capacity-section" aria-label="Kapasitas Parkir">
+        <h3>Kapasitas Slot Aktif</h3>
+        <div id="capacity-grid" class="capacity-grid"></div>
+      </div>
+    </section>
+
+    <!-- Panel Log Parkir -->
+    <section class="card" aria-labelledby="log-heading">
+      <div class="log-header">
+        <h2 id="log-heading">Log Parkir</h2>
+        <button type="button" id="btn-reset" class="btn btn-ghost btn-sm">Reset Data</button>
+      </div>
+
+      <!-- Fitur 3: Pencarian, Filter & Penyimpanan Permanen -->
+      <div class="toolbar">
+        <input
+          type="search"
+          id="search-plat"
+          placeholder="Cari nomor plat..."
+          aria-label="Cari nomor plat di log"
+        >
+        <select id="filter-status" aria-label="Filter status log">
+          <option value="ALL">Semua Status</option>
+          <option value="ACTIVE">Sedang Parkir</option>
+          <option value="COMPLETED">Sudah Keluar</option>
+        </select>
+      </div>
+
+      <ul id="log-list" class="log-list" aria-live="polite"></ul>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "smart_parking_logs_v1";
+
+      const VEHICLE_CONFIG = {
+        Motor: { ratePerHour: 3000, maxCapacity: 50 },
+        Mobil: { ratePerHour: 5000, maxCapacity: 30 },
+        Bus: { ratePerHour: 10000, maxCapacity: 10 },
+      };
+
+      const currencyFormatter = new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        maximumFractionDigits: 0,
+      });
+
+      const dateTimeFormatter = new Intl.DateTimeFormat("id-ID", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+
+      const platInput = document.getElementById("plat");
+      const btnMasuk = document.getElementById("btn-masuk");
+      const btnKeluar = document.getElementById("btn-keluar");
+      const btnReset = document.getElementById("btn-reset");
+      const searchInput = document.getElementById("search-plat");
+      const filterSelect = document.getElementById("filter-status");
+      const logList = document.getElementById("log-list");
+      const capacityGrid = document.getElementById("capacity-grid");
+      const totalRevenueEl = document.getElementById("total-revenue");
+      const feedbackEl = document.getElementById("feedback");
+
+      let records = loadRecords();
+
+      function loadRecords() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function saveRecords() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      }
+
+      function normalizePlate(value) {
+        return value.trim().replace(/\s+/g, " ").toUpperCase();
+      }
+
+      function getSelectedVehicleType() {
+        const checked = document.querySelector('input[name="jenis"]:checked');
+        return checked ? checked.value : "Motor";
+      }
+
+      function showFeedback(message, type = "success") {
+        feedbackEl.textContent = message;
+        feedbackEl.className = `feedback is-visible is-${type}`;
+      }
+
+      function calculateHours(entryIso, exitIso) {
+        const diffMs = Math.max(0, new Date(exitIso) - new Date(entryIso));
+        const hours = Math.ceil(diffMs / (1000 * 60 * 60));
+        return Math.max(1, hours);
+      }
+
+      function handleMasuk() {
+        const plat = normalizePlate(platInput.value);
+        const jenis = getSelectedVehicleType();
+
+        if (!plat || plat.length < 3) {
+          showFeedback("Masukkan nomor plat kendaraan yang valid.", "error");
+          platInput.focus();
+          return;
+        }
+
+        const alreadyActive = records.some((item) => item.plat === plat && item.status === "ACTIVE");
+        if (alreadyActive) {
+          showFeedback(`Kendaraan dengan plat ${plat} sudah tercatat sedang parkir.`, "error");
+          return;
+        }
+
+        const activeCount = records.filter((item) => item.jenis === jenis && item.status === "ACTIVE").length;
+        const maxSlot = VEHICLE_CONFIG[jenis].maxCapacity;
+        if (activeCount >= maxSlot) {
+          showFeedback(`Slot parkir untuk ${jenis} sudah penuh (${maxSlot}/${maxSlot}).`, "error");
+          return;
+        }
+
+        const newRecord = {
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+          plat,
+          jenis,
+          entryTime: new Date().toISOString(),
+          exitTime: null,
+          hours: 0,
+          fee: 0,
+          status: "ACTIVE",
+        };
+
+        records.unshift(newRecord);
+        saveRecords();
+        renderAll();
+        platInput.value = "";
+        showFeedback(`${jenis} (${plat}) berhasil check-in.`, "success");
+      }
+
+      function handleKeluar() {
+        const plat = normalizePlate(platInput.value);
+
+        if (!plat) {
+          showFeedback("Masukkan nomor plat kendaraan yang akan keluar.", "error");
+          platInput.focus();
+          return;
+        }
+
+        const index = records.findIndex((item) => item.plat === plat && item.status === "ACTIVE");
+        if (index === -1) {
+          showFeedback(`Tidak ada kendaraan aktif dengan plat ${plat}.`, "error");
+          return;
+        }
+
+        const record = records[index];
+        const exitTime = new Date().toISOString();
+        const hours = calculateHours(record.entryTime, exitTime);
+        const rate = VEHICLE_CONFIG[record.jenis].ratePerHour;
+        const fee = hours * rate;
+
+        records[index] = {
+          ...record,
+          exitTime,
+          hours,
+          fee,
+          status: "COMPLETED",
+        };
+
+        saveRecords();
+        renderAll();
+        platInput.value = "";
+        showFeedback(
+          `${record.plat} keluar — Durasi ${hours} jam, Tarif ${currencyFormatter.format(fee)}.`,
+          "success"
+        );
+      }
+
+      function handleReset() {
+        if (records.length === 0) return;
+        const confirmed = window.confirm("Hapus seluruh riwayat dan data parkir?");
+        if (!confirmed) return;
+
+        records = [];
+        saveRecords();
+        renderAll();
+        showFeedback("Seluruh data parkir telah direset.", "success");
+      }
+
+      function renderCapacity() {
+        capacityGrid.innerHTML = "";
+
+        Object.entries(VEHICLE_CONFIG).forEach(([jenis, config]) => {
+          const active = records.filter((r) => r.jenis === jenis && r.status === "ACTIVE").length;
+          const item = document.createElement("div");
+          item.className = "capacity-item";
+
+          const title = document.createElement("strong");
+          title.textContent = jenis;
+
+          const info = document.createElement("span");
+          info.textContent = `${active} / ${config.maxCapacity} slot`;
+
+          item.append(title, info);
+          capacityGrid.appendChild(item);
+        });
+      }
+
+      function renderRevenue() {
+        const total = records
+          .filter((r) => r.status === "COMPLETED")
+          .reduce((sum, r) => sum + r.fee, 0);
+
+        totalRevenueEl.textContent = currencyFormatter.format(total);
+      }
+
+      function renderLogs() {
+        const query = normalizePlate(searchInput.value);
+        const statusFilter = filterSelect.value;
+
+        const filtered = records.filter((item) => {
+          const matchPlat = item.plat.includes(query);
+          const matchStatus = statusFilter === "ALL" || item.status === statusFilter;
+          return matchPlat && matchStatus;
+        });
+
+        logList.innerHTML = "";
+
+        if (filtered.length === 0) {
+          const empty = document.createElement("li");
+          empty.className = "empty-state";
+          empty.textContent = "Belum ada data log parkir yang sesuai.";
+          logList.appendChild(empty);
+          return;
+        }
+
+        filtered.forEach((item) => {
+          const li = document.createElement("li");
+          li.className = "log-item";
+
+          const left = document.createElement("div");
+          const platEl = document.createElement("div");
+          platEl.className = "log-plat";
+          platEl.textContent = `${item.plat} • ${item.jenis}`;
+
+          const metaEl = document.createElement("div");
+          metaEl.className = "log-meta";
+          const entryFormatted = dateTimeFormatter.format(new Date(item.entryTime));
+          if (item.status === "ACTIVE") {
+            metaEl.textContent = `Masuk: ${entryFormatted}`;
+          } else {
+            const exitFormatted = dateTimeFormatter.format(new Date(item.exitTime));
+            metaEl.textContent = `Masuk: ${entryFormatted} | Keluar: ${exitFormatted} (${item.hours} jam)`;
+          }
+
+          left.append(platEl, metaEl);
+
+          const right = document.createElement("div");
+          right.className = "log-right";
+
+          const badge = document.createElement("span");
+          badge.className = `badge ${item.status === "ACTIVE" ? "badge-active" : "badge-done"}`;
+          badge.textContent = item.status === "ACTIVE" ? "Sedang Parkir" : "Selesai";
+
+          right.appendChild(badge);
+
+          if (item.status === "COMPLETED") {
+            const feeEl = document.createElement("div");
+            feeEl.className = "log-fee";
+            feeEl.textContent = currencyFormatter.format(item.fee);
+            right.appendChild(feeEl);
+          }
+
+          li.append(left, right);
+          logList.appendChild(li);
+        });
+      }
+
+      function renderAll() {
+        renderCapacity();
+        renderRevenue();
+        renderLogs();
+      }
+
+      btnMasuk.addEventListener("click", handleMasuk);
+      btnKeluar.addEventListener("click", handleKeluar);
+      btnReset.addEventListener("click", handleReset);
+      searchInput.addEventListener("input", renderLogs);
+      filterSelect.addEventListener("change", renderLogs);
+
+      platInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          handleMasuk();
+        }
+      });
+
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
